@@ -1,0 +1,37 @@
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Python packaging / build
+build/
+dist/
+*.egg-info/
+
+# C / compiled files
+*.o
+*.so
+*.out
+*.exe
+
+# Assignment archive outputs
+*.tar.gz
+*.zip
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+
+# Bonus generated output
+elbow.png
