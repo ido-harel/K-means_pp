@@ -2,6 +2,9 @@ import sys
 import numpy as np
 import pandas as pd
 import math
+import mykmeanssp
+
+
 DEFAULT_K = 3
 
 def print_and_exit(message):
@@ -24,7 +27,9 @@ def probabilities(min_dist, chosen_indices):
         min_dist[index] = 0.0
     total = np.sum(min_dist)
 
-    probabilities = np.zeros(len(min_dist))
+    if total == 0:
+
+        probabilities = np.zeros(len(min_dist))
         unchosen_indices = [
             i for i in range(len(min_dist)) if i not in chosen_indices
         ]
@@ -50,8 +55,8 @@ def kmeans_pp_init(data_points, K):
         current_centroids = np.array(centroids)
 
         min_dist = euclidean_distances_from_centroids(data_points,current_centroids)
-        probabilities = probabilities(min_dist,chosen_indices)
-        next_index = choose_next_centroid(probabilities)
+        probs = probabilities(min_dist,chosen_indices)
+        next_index = choose_next_centroid(probs)
 
         chosen_indices.append(next_index)
         centroids.append(data_points[next_index])
@@ -65,14 +70,15 @@ def load_data(file1, file2):
 
     merged = pd.merge(df1, df2, on=0, how="inner")
     merged = merged.sort_values(by=0).reset_index(drop=True)
+    keys = merged.iloc[:, 0].to_numpy()
     data_points = merged.iloc[:, 1:].to_numpy(dtype=float)
 
-    return data_points
+    return keys, data_points
 
 def parse_args():
-    len = len(sys.argv)
+    argc = len(sys.argv)
 
-    if len == 6:
+    if argc == 6:
         k = sys.argv[1]
         iter = sys.argv[2]
         eps = sys.argv[3]
@@ -83,7 +89,7 @@ def parse_args():
             print_and_exit("Incorrect number of clusters!")
         K = int(k)
 
-    elif len == 5:
+    elif argc == 5:
         K = DEFAULT_K
         iter = sys.argv[1]
         eps = sys.argv[2]
@@ -117,13 +123,26 @@ def parse_args():
 
 def main():
     K, iter, eps, file1, file2 = parse_args()
-    data_points = load_data(file1, file2)
-    N = data_points.shape[0]
+    try: #incorrect file path or file format will raise an exception, which is caught and handled by printing an error message and exiting the program.
+        keys, data_points = load_data(file1, file2)
+        N = data_points.shape[0]
 
-    if not (K < N):
-        print_and_exit("Incorrect number of clusters!")
+        if not (K < N):
+            print_and_exit("Incorrect number of clusters!")
 
-    indices, initial_centroids = kmeans_pp_init(data_points, K)
+        indices, initial_centroids = kmeans_pp_init(data_points, K)
+        final_centroids = mykmeanssp.fit(data_points, initial_centroids, K, iter, eps)
+    except SystemExit:
+        raise
+    except Exception:
+        print_and_exit("An Error Has Occurred")
 
-    # later we wiil need the wrapper function 
-    # final_centroids = mykmeanssp.py_run_kmeans(data_points, initial_centroids, K, iter, eps)
+
+    #first line: first column indices of the initial centroids, separated by commas
+    print(",".join(str(int(keys[i])) for i in indices))
+    #Following lines: final centroids, one per line, 4 decimal places, values separated by commas
+    for centroid in final_centroids:
+        print(",".join("%.4f" % coord for coord in centroid))
+
+if __name__ == "__main__":
+    main()
