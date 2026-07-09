@@ -11,4 +11,3 @@ setup(
     description="K-means clustering C extension for HW2 (K-means++).",
     ext_modules=[module],
 )
- 

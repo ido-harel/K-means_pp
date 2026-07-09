@@ -18,108 +18,9 @@ void add_point_to_cluster(const double *point, int cluster_index, double *sums, 
 int update_centroids(double *centroids, const double *sums, const int *counts, int k, int cols, double epsilon);
 int run_kmeans(const DataSet *data, double *centroids, int k, int iter, double epsilon);
 
-/* Convert a Python list-of-lists of numbers into a flat row-major C array.
-   Sets *rows_out and *cols_out. Returns NULL (with a Python error set) on failure. */
-static double *python_matrix_to_flat_array(PyObject *matrix_obj, int *rows_out, int *cols_out)
-{
-    Py_ssize_t rows, cols;
-    Py_ssize_t i, j;
-    double *arr;
-    PyObject *row_obj, *item_obj;
-
-    if(!PySequence_Check(matrix_obj)) {
-        PyErr_SetString(PyExc_TypeError, "Expected a sequence of sequences");
-        return NULL;
-    }
-    rows = PySequence_Size(matrix_obj);
-    if(rows <= 0) {
-        PyErr_SetString(PyExc_ValueError, "Empty matrix");
-        return NULL;
-    }
-
-    row_obj = PySequence_GetItem(matrix_obj, 0);
-    if(row_obj == NULL) {
-        return NULL;
-    }
-    if(!PySequence_Check(row_obj)) {
-        Py_DECREF(row_obj);
-        PyErr_SetString(PyExc_TypeError, "Expected a sequence of sequences");
-        return NULL;
-    }
-    cols = PySequence_Size(row_obj);
-    Py_DECREF(row_obj);
-
-    arr = (double *) malloc((size_t)(rows * cols) * sizeof(double));
-    if(arr == NULL) {
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for(i=0; i<rows; i++){
-        row_obj = PySequence_GetItem(matrix_obj, i);
-        if(row_obj == NULL) {
-            free(arr);
-            return NULL;
-        }
-        if(!PySequence_Check(row_obj) || PySequence_Size(row_obj) != cols) {
-            Py_DECREF(row_obj);
-            free(arr);
-            PyErr_SetString(PyExc_TypeError, "Ragged matrix");
-            return NULL;
-        }
-        for(j=0; j<cols; j++){
-            item_obj = PySequence_GetItem(row_obj, j);
-            if(item_obj == NULL) {
-                Py_DECREF(row_obj);
-                free(arr);
-                return NULL;
-            }
-            arr[i * cols + j] = PyFloat_AsDouble(item_obj);
-            Py_DECREF(item_obj);
-            if(PyErr_Occurred()) {
-                Py_DECREF(row_obj);
-                free(arr);
-                return NULL;
-            }
-        }
-        Py_DECREF(row_obj);
-    }
-    *rows_out = (int)rows;
-    *cols_out = (int)cols;
-    return arr;  
-}
-
-/* Convert a flat row-major C array into a Python list-of-lists of floats. */
-static PyObject *flat_array_to_python_matrix(double *arr, int rows, int cols)
-{
-    PyObject *matrix;
-    PyObject *row;
-    PyObject *val;
-    int i, j;
-
-    matrix = PyList_New(rows);
-    if(matrix == NULL) {
-        return NULL;
-    }
-
-    for(i=0; i<rows; i++){
-        row = PyList_New(cols);
-        if(row == NULL) {
-            Py_DECREF(matrix);
-            return NULL;
-        }
-        for(j=0; j<cols; j++){
-            val = PyFloat_FromDouble(arr[i * cols + j]);
-            if(val == NULL) {
-                Py_DECREF(row);
-                Py_DECREF(matrix);
-                return NULL;
-            }
-            PyList_SET_ITEM(row, j, val); /* steals reference to val */
-        }
-        PyList_SET_ITEM(matrix, i, row); /* steals reference to row */
-    }
-    return matrix;
-}
+/* Conversion functions */
+static double *python_matrix_to_flat_array(PyObject *matrix_obj, int *rows_out, int *cols_out);
+static PyObject *flat_array_to_python_matrix(double *arr, int rows, int cols);
 
 /* Wrapper function for Python */
 static PyObject *py_run_kmeans(PyObject *self, PyObject *args);
@@ -232,6 +133,106 @@ int run_kmeans(const DataSet *data, double *centroids, int k, int iter, double e
     free(sums);
     free(counts);
     return 1;
+}
+
+static double *python_matrix_to_flat_array(PyObject *matrix_obj, int *rows_out, int *cols_out)
+{
+    Py_ssize_t rows, cols;
+    Py_ssize_t i, j;
+    double *arr;
+    PyObject *row_obj, *item_obj;
+
+    if(!PySequence_Check(matrix_obj)) {
+        PyErr_SetString(PyExc_TypeError, "Expected a sequence of sequences");
+        return NULL;
+    }
+    rows = PySequence_Size(matrix_obj);
+    if(rows <= 0) {
+        PyErr_SetString(PyExc_ValueError, "Empty matrix");
+        return NULL;
+    }
+
+    row_obj = PySequence_GetItem(matrix_obj, 0);
+    if(row_obj == NULL) {
+        return NULL;
+    }
+    if(!PySequence_Check(row_obj)) {
+        Py_DECREF(row_obj);
+        PyErr_SetString(PyExc_TypeError, "Expected a sequence of sequences");
+        return NULL;
+    }
+    cols = PySequence_Size(row_obj);
+    Py_DECREF(row_obj);
+
+    arr = (double *) malloc((size_t)(rows * cols) * sizeof(double));
+    if(arr == NULL) {
+        PyErr_NoMemory();
+        return NULL;
+    }
+    for(i=0; i<rows; i++){
+        row_obj = PySequence_GetItem(matrix_obj, i);
+        if(row_obj == NULL) {
+            free(arr);
+            return NULL;
+        }
+        if(!PySequence_Check(row_obj) || PySequence_Size(row_obj) != cols) {
+            Py_DECREF(row_obj);
+            free(arr);
+            PyErr_SetString(PyExc_TypeError, "Ragged matrix");
+            return NULL;
+        }
+        for(j=0; j<cols; j++){
+            item_obj = PySequence_GetItem(row_obj, j);
+            if(item_obj == NULL) {
+                Py_DECREF(row_obj);
+                free(arr);
+                return NULL;
+            }
+            arr[i * cols + j] = PyFloat_AsDouble(item_obj);
+            Py_DECREF(item_obj);
+            if(PyErr_Occurred()) {
+                Py_DECREF(row_obj);
+                free(arr);
+                return NULL;
+            }
+        }
+        Py_DECREF(row_obj);
+    }
+    *rows_out = (int)rows;
+    *cols_out = (int)cols;
+    return arr;  
+}
+
+static PyObject *flat_array_to_python_matrix(double *arr, int rows, int cols)
+{
+    PyObject *matrix;
+    PyObject *row;
+    PyObject *val;
+    int i, j;
+
+    matrix = PyList_New(rows);
+    if(matrix == NULL) {
+        return NULL;
+    }
+
+    for(i=0; i<rows; i++){
+        row = PyList_New(cols);
+        if(row == NULL) {
+            Py_DECREF(matrix);
+            return NULL;
+        }
+        for(j=0; j<cols; j++){
+            val = PyFloat_FromDouble(arr[i * cols + j]);
+            if(val == NULL) {
+                Py_DECREF(row);
+                Py_DECREF(matrix);
+                return NULL;
+            }
+            PyList_SET_ITEM(row, j, val); /* steals reference to val */
+        }
+        PyList_SET_ITEM(matrix, i, row); /* steals reference to row */
+    }
+    return matrix;
 }
 
 static PyObject *py_run_kmeans(PyObject *self, PyObject *args)

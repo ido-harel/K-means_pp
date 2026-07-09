@@ -4,7 +4,6 @@ import pandas as pd
 import math
 import mykmeanssp
 
-
 DEFAULT_K = 3
 
 def print_and_exit(message):
@@ -123,7 +122,7 @@ def parse_args():
 
 def main():
     K, iter, eps, file1, file2 = parse_args()
-    try: #incorrect file path or file format will raise an exception, which is caught and handled by printing an error message and exiting the program.
+    try: #check incorrect file path or file format
         keys, data_points = load_data(file1, file2)
         N = data_points.shape[0]
 
@@ -137,10 +136,9 @@ def main():
     except Exception:
         print_and_exit("An Error Has Occurred")
 
-
-    #first line: first column indices of the initial centroids, separated by commas
+    #first line: first column indices of the initial centroids
     print(",".join(str(int(keys[i])) for i in indices))
-    #Following lines: final centroids, one per line, 4 decimal places, values separated by commas
+    #Ffinal centroids
     for centroid in final_centroids:
         print(",".join("%.4f" % coord for coord in centroid))
 

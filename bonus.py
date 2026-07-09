@@ -25,7 +25,7 @@ def main():
     ax.set_ylabel("Average Dispersion")
     ax.set_xticks(ks)
 
-    # Highlight the elbow point with a dashed circle and an annotation.
+    # Highlight the elbow point
     elbow_value = inertias[ELBOW_K - 1]
     x_span = ks[-1] - ks[0]
     y_span = max(inertias) - min(inertias)
