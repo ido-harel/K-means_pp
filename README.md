@@ -1,15 +1,62 @@
-# HW2 - K-means++
+# K-means++ Clustering — Python & C
 
-Software Project - Assignment 2
+Implementation of the **K-means++ initialization algorithm** in Python, integrated with a **C extension module** that performs the iterative K-means clustering computation.
 
-This project implements K-means++ initialization in Python and uses a C extension module to run the K-means clustering algorithm.
+The project combines Python's high-level data handling with a lower-level C implementation of the computational core, providing hands-on experience with numerical algorithms, memory management, and Python–C interoperability.
+
+## Features
+
+* Implements **K-means++ centroid initialization** in Python.
+* Implements the iterative **K-means clustering algorithm** in C.
+* Exposes the C implementation to Python through a custom extension module.
+* Separates initialization, clustering logic, and Python/C integration into modular components.
+* Supports local testing and validation of the implementation.
 
 ## Project Structure
+
 ```text
-HW2/
-├── kmeans_pp.py        # Main Python interface
-├── kmeansmodule.c      # C extension module with K-means implementation
-├── setup.py            # Build file for the C extension
-├── README.md
+kmeans-python-c/
+├── kmeans_pp.py        # K-means++ initialization and Python interface
+├── kmeansmodule.c      # C extension implementing the K-means algorithm
+├── setup.py            # Build configuration for the C extension
+├── tests/              # Local tests
 ├── .gitignore
-└── tests/              # Optional local test files
+└── README.md
+```
+
+## Architecture
+
+The project is divided into two main layers:
+
+**Python layer — `kmeans_pp.py`**
+
+Responsible for data handling, K-means++ centroid initialization, and interaction with the C extension.
+
+**C layer — `kmeansmodule.c`**
+
+Implements the computational part of the K-means algorithm and exposes it as a module that can be called directly from Python.
+
+This structure keeps the high-level workflow in Python while moving the core numerical computation to C.
+
+## Technologies
+
+* Python
+* C
+* Python C API
+* NumPy
+* Git
+
+## What I Practiced
+
+This project provided practical experience with:
+
+* Implementing numerical and clustering algorithms.
+* Integrating C code with Python.
+* Managing data transfer between Python and C.
+* Working with memory and data structures in C.
+* Structuring a project across multiple programming languages.
+* Debugging and testing a native Python extension.
+
+## Background
+
+Developed as part of a Software Project course at Tel Aviv University.
